@@ -1,0 +1,40 @@
+# Node
+node_modules/
+.pnpm-store/
+dist/
+.next/
+out/
+*.tsbuildinfo
+
+# Expo
+.expo/
+*.orig.*
+web-build/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.uv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+
+# Env & secrets
+.env
+.env.*
+!.env.example
+
+# Logs / OS
+*.log
+.DS_Store
+
+# Coverage / build artifacts
+coverage/
+.turbo/
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*

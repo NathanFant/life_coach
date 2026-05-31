@@ -1,0 +1,25 @@
+{
+  "name": "life-coach",
+  "version": "0.1.0",
+  "private": true,
+  "description": "AI Life Coach — monorepo (web + mobile clients, FastAPI AI core).",
+  "packageManager": "pnpm@9.12.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "format": "prettier --write \"**/*.{ts,tsx,md,json}\"",
+    "api:dev": "uv --project services/api run uvicorn app.main:app --reload --port 8000",
+    "api:test": "uv --project services/api run pytest"
+  },
+  "devDependencies": {
+    "prettier": "^3.3.3",
+    "turbo": "^2.1.0",
+    "typescript": "^5.6.0"
+  }
+}

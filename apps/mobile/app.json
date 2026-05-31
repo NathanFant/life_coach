@@ -1,0 +1,15 @@
+{
+  "expo": {
+    "name": "AI Life Coach",
+    "slug": "ai-life-coach",
+    "scheme": "lifecoach",
+    "version": "0.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "plugins": ["expo-router"],
+    "ios": { "supportsTablet": true, "bundleIdentifier": "com.lifecoach.app" },
+    "android": { "package": "com.lifecoach.app" },
+    "experiments": { "typedRoutes": true }
+  }
+}
