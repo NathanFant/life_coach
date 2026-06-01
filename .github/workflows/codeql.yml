@@ -29,12 +29,6 @@ jobs:
           languages: python
           # Additional queries: security + quality
           queries: security-extended, security-and-quality
-          config: |
-            paths:
-              - services/api/app
-            paths-ignore:
-              - services/api/tests
-              - services/api/migrations
 
       - name: Set up uv
         uses: astral-sh/setup-uv@v4
@@ -65,18 +59,10 @@ jobs:
         with:
           languages: javascript-typescript
           queries: security-extended, security-and-quality
-          config: |
-            paths:
-              - apps/web
-              - packages
-            paths-ignore:
-              - node_modules
-              - .next
-              - dist
 
       - uses: pnpm/action-setup@v4
         with:
-          version: 9
+          version: 9.12.0
 
       - uses: actions/setup-node@v4
         with:
