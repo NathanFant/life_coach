@@ -1,8 +1,12 @@
-"""SQLAlchemy declarative base + shared column mixins.
-
-Concrete models (users, life_profiles, goals, ... see docs/DESIGN.md §4) live in
-app/db/models/ and are added in Phase 0/1 alongside Alembic migrations.
 """
+SQLAlchemy declarative base + shared column mixins.
+
+Every table uses TimestampMixin for created_at/updated_at.
+User-content tables also mix in soft_delete for deleted_at.
+Audit tables are append-only and use TimestampMixin only.
+"""
+
+from __future__ import annotations
 
 from datetime import datetime
 
@@ -16,8 +20,19 @@ class Base(DeclarativeBase):
 
 class TimestampMixin:
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now()
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
     )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+        onupdate=func.now(),
+    )
+
+
+class soft_delete:  # noqa: N801 — intentionally lowercase for mixin readability
+    deleted_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True, default=None
     )
