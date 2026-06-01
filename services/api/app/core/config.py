@@ -18,8 +18,12 @@ class Settings(BaseSettings):
     celery_result_backend: str = "redis://localhost:6379/2"
 
     # Auth (Clerk) — backend verifies JWTs via JWKS.
+    # CLERK_ISSUER is optional: Clerk does not expose the issuer value in the
+    # dashboard. When absent, issuer validation is skipped (signature + expiry
+    # still verified). Set it to the Clerk frontend API URL if you want the
+    # extra check (format: https://<slug>.clerk.accounts.dev).
     clerk_jwks_url: str = ""
-    clerk_issuer: str = ""
+    clerk_issuer: str = ""  # optional — leave blank to skip issuer validation
 
     # LLM routing (model-agnostic; see docs/DESIGN.md §6.1)
     coach_model: str = "anthropic/claude-sonnet-4-6"

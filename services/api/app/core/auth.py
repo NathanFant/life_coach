@@ -126,8 +126,15 @@ def decode_clerk_jwt(
     singleton that fetches from CLERK_JWKS_URL.
 
     Raises AuthError on any verification failure (expired, bad sig, wrong iss, etc.).
+
+    Issuer validation: Clerk does not display the issuer value in the dashboard.
+    When CLERK_ISSUER is absent (empty string), issuer validation is skipped —
+    the signature and expiry are still validated.  Set CLERK_ISSUER to enable
+    the extra check (format: https://<slug>.clerk.accounts.dev).
     """
-    iss = issuer or _settings.clerk_issuer
+    # Use a non-empty issuer only — blank means "skip issuer check"
+    configured_issuer = issuer if issuer is not None else _settings.clerk_issuer
+    iss: str | None = configured_issuer or None
     aud = audience  # None → skip audience check (Clerk tokens may omit aud)
 
     try:
@@ -150,9 +157,12 @@ def decode_clerk_jwt(
         client = jwks_client or _get_jwks_client()
         public_key = client.get_key(kid)
 
-    # Verify signature, expiry, and issuer
+    # Verify signature, expiry, and optionally issuer
     try:
-        options: dict[str, Any] = {"verify_aud": aud is not None}
+        options: dict[str, Any] = {
+            "verify_aud": aud is not None,
+            "verify_iss": iss is not None,
+        }
         payload: dict[str, Any] = jose_jwt.decode(
             token,
             public_key,
