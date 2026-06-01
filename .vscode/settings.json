@@ -1,0 +1,16 @@
+{
+  "python.defaultInterpreterPath": "${workspaceFolder}/services/api/.venv/bin/python",
+  "python.analysis.extraPaths": ["${workspaceFolder}/services/api"],
+  "python.terminal.activateEnvironment": true,
+  "[python]": {
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "charliermarsh.ruff",
+    "editor.codeActionsOnSave": {
+      "source.fixAll.ruff": "explicit",
+      "source.organizeImports.ruff": "explicit"
+    }
+  },
+  "ruff.path": ["${workspaceFolder}/services/api/.venv/bin/ruff"],
+  "mypy-type-checker.interpreter": ["${workspaceFolder}/services/api/.venv/bin/python"],
+  "mypy-type-checker.args": ["--config-file", "${workspaceFolder}/services/api/pyproject.toml"]
+}

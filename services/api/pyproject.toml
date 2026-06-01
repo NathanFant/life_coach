@@ -26,8 +26,13 @@ dependencies = [
 dev = [
     "pytest>=8.3.0",
     "pytest-asyncio>=0.24.0",
+    "pytest-httpx>=0.35.0",
+    "respx>=0.21.0",
+    "factory-boy>=3.3.0",
+    "freezegun>=1.5.0",
     "ruff>=0.7.0",
     "mypy>=1.11.0",
+    "types-python-jose>=3.3.4",
 ]
 
 [tool.ruff]
@@ -35,13 +40,27 @@ line-length = 100
 target-version = "py312"
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "UP", "B", "ASYNC"]
+select = ["E", "F", "I", "UP", "B", "ASYNC", "PTH", "RET", "SIM"]
+ignore = ["B008"]  # FastAPI Depends() in function signatures
+
+[tool.ruff.lint.isort]
+known-first-party = ["app"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
+markers = [
+    "unit: fast tests with no external services",
+    "integration: tests that require Postgres/Redis (docker-compose up first)",
+    "eval: coaching quality evaluation tests",
+    "safety: safety red-team regression tests (gate for CI)",
+]
+filterwarnings = [
+    "ignore::DeprecationWarning:starlette",
+]
 
 [tool.mypy]
 python_version = "3.12"
 strict = true
 plugins = ["pydantic.mypy"]
+ignore_missing_imports = true
