@@ -24,9 +24,7 @@ class CoachingOrchestrator:
         self._memory = memory
         self._safety = safety
 
-    async def run_turn(
-        self, user_id: str, session_id: str, message: str
-    ) -> AsyncIterator[dict]:
+    async def run_turn(self, user_id: str, session_id: str, message: str) -> AsyncIterator[dict]:
         """Execute the pipeline and yield SSE events (token/tool_call/followups/...).
 
         TODO (Phase 1):
