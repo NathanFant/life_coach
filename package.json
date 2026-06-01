@@ -1,6 +1,7 @@
 {
   "name": "life-coach",
   "version": "0.1.0",
+  "license": "Elastic License 2.0",
   "private": true,
   "description": "AI Life Coach — monorepo (web + mobile clients, FastAPI AI core).",
   "packageManager": "pnpm@9.12.0",
