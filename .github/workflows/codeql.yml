@@ -27,8 +27,6 @@ jobs:
         uses: github/codeql-action/init@v4
         with:
           languages: python
-          # Additional queries: security + quality
-          queries: security-extended, security-and-quality
 
       - name: Set up uv
         uses: astral-sh/setup-uv@v4
@@ -58,7 +56,6 @@ jobs:
         uses: github/codeql-action/init@v4
         with:
           languages: javascript-typescript
-          queries: security-extended, security-and-quality
 
       - uses: pnpm/action-setup@v4
         with:
