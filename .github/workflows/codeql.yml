@@ -1,0 +1,92 @@
+name: CodeQL Security Analysis
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    # Weekly full scan every Sunday at 2am UTC
+    - cron: "0 2 * * 0"
+
+permissions:
+  actions: read
+  contents: read
+  security-events: write
+
+jobs:
+  # ── Python analysis (FastAPI AI core) ─────────────────────────────────────────
+  analyze-python:
+    name: CodeQL — Python
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: python
+          # Additional queries: security + quality
+          queries: security-extended, security-and-quality
+          config: |
+            paths:
+              - services/api/app
+            paths-ignore:
+              - services/api/tests
+              - services/api/migrations
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          version: "latest"
+
+      - name: Install Python dependencies
+        run: |
+          cd services/api
+          uv python install 3.12
+          uv sync
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: python
+
+  # ── JavaScript/TypeScript analysis (Next.js web + shared packages) ─────────────
+  analyze-typescript:
+    name: CodeQL — TypeScript
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: javascript-typescript
+          queries: security-extended, security-and-quality
+          config: |
+            paths:
+              - apps/web
+              - packages
+            paths-ignore:
+              - node_modules
+              - .next
+              - dist
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: javascript-typescript

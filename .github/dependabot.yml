@@ -1,0 +1,97 @@
+# Dependabot — automated dependency update PRs (issue #10)
+#
+# Checks for updates weekly (Monday 9am UTC) across all package ecosystems.
+# PRs are auto-labeled for easy triage. Security updates are opened immediately.
+
+version: 2
+
+updates:
+  # ── npm (web + mobile apps + shared packages) ───────────────────────────────
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "09:00"
+    labels:
+      - dependencies
+      - javascript
+    groups:
+      # Group minor + patch Clerk updates to reduce noise
+      clerk:
+        patterns:
+          - "@clerk/*"
+      # Group React ecosystem updates together
+      react:
+        patterns:
+          - "react"
+          - "react-dom"
+          - "@types/react"
+          - "@types/react-dom"
+      # Group Next.js + related
+      nextjs:
+        patterns:
+          - "next"
+          - "eslint-config-next"
+    # Cap open PRs to avoid overwhelming the queue
+    open-pull-requests-limit: 10
+
+  # ── pip (FastAPI AI core) ────────────────────────────────────────────────────
+  - package-ecosystem: pip
+    directory: /services/api
+    schedule:
+      interval: weekly
+      day: monday
+      time: "09:00"
+    labels:
+      - dependencies
+      - python
+    groups:
+      # Group LiteLLM (changes frequently)
+      litellm:
+        patterns:
+          - "litellm"
+      # Group SQLAlchemy + Alembic together
+      sqlalchemy:
+        patterns:
+          - "sqlalchemy"
+          - "alembic"
+      # Group FastAPI + Pydantic
+      fastapi:
+        patterns:
+          - "fastapi"
+          - "pydantic"
+          - "pydantic-settings"
+    open-pull-requests-limit: 10
+
+  # ── Docker (base images in infra/docker/) ───────────────────────────────────
+  - package-ecosystem: docker
+    directory: /services/api
+    schedule:
+      interval: weekly
+      day: monday
+      time: "09:00"
+    labels:
+      - dependencies
+      - docker
+
+  - package-ecosystem: docker
+    directory: /infra/docker
+    schedule:
+      interval: weekly
+      day: monday
+      time: "09:00"
+    labels:
+      - dependencies
+      - docker
+
+  # ── GitHub Actions ────────────────────────────────────────────────────────────
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "09:00"
+    labels:
+      - dependencies
+      - github-actions
