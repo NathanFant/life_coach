@@ -23,7 +23,9 @@ class ContextBundle:
 
 
 class MemoryService:
-    async def retrieve(self, user_id: str, query: str, *, token_budget: int = 3000) -> ContextBundle:
+    async def retrieve(
+        self, user_id: str, query: str, *, token_budget: int = 3000
+    ) -> ContextBundle:
         """Hybrid retrieval: always-load + vector + structured, ranked + MMR (§5.3–5.4)."""
         raise NotImplementedError
 
