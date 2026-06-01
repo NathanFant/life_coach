@@ -1,0 +1,229 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Cancel in-progress runs for the same branch on new pushes
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHON_VERSION: "3.12"
+  NODE_VERSION: "20"
+  # Test-safe defaults — no real services needed for unit tests
+  ENVIRONMENT: test
+  DATABASE_URL: "postgresql+psycopg://coach:coach@localhost:5432/lifecoach_test"
+  REDIS_URL: "redis://localhost:6379/15"
+  CLERK_JWKS_URL: "https://test.clerk.accounts.dev/.well-known/jwks.json"
+  CLERK_ISSUER: "https://test.clerk.accounts.dev"
+
+jobs:
+  # ────────────────────────────────────────────────────────────────────────────
+  # 1. Lint and type-check (Python)
+  # ────────────────────────────────────────────────────────────────────────────
+  lint-python:
+    name: Lint & type-check (Python)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services/api
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          version: "latest"
+
+      - name: Install Python ${{ env.PYTHON_VERSION }}
+        run: uv python install ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: uv sync --dev
+
+      - name: Lint (ruff)
+        run: uv run ruff check app/ tests/
+
+      - name: Format check (ruff)
+        run: uv run ruff format --check app/ tests/
+
+      - name: Type check (mypy)
+        run: uv run mypy app/
+        continue-on-error: true  # warnings only in Phase 0; harden in Phase 1
+
+  # ────────────────────────────────────────────────────────────────────────────
+  # 2. Unit tests (Python) — no external services required
+  # ────────────────────────────────────────────────────────────────────────────
+  test-unit:
+    name: Unit tests (Python)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services/api
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          version: "latest"
+
+      - name: Install Python ${{ env.PYTHON_VERSION }}
+        run: uv python install ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: uv sync --dev
+
+      - name: Run unit tests
+        run: |
+          uv run python -m pytest tests/ \
+            -m "unit or safety or not integration" \
+            --ignore=tests/eval/test_safety_redteam.py \
+            -v --tb=short \
+            --junitxml=test-results/unit.xml
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: unit-test-results
+          path: services/api/test-results/
+
+  # ────────────────────────────────────────────────────────────────────────────
+  # 3. Safety gate — red-team suite MUST pass before any deploy
+  # ────────────────────────────────────────────────────────────────────────────
+  safety-gate:
+    name: Safety gate (red-team)
+    runs-on: ubuntu-latest
+    needs: [test-unit]
+    defaults:
+      run:
+        working-directory: services/api
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          version: "latest"
+
+      - name: Install Python ${{ env.PYTHON_VERSION }}
+        run: uv python install ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: uv sync --dev
+
+      - name: Run safety red-team suite (CI gate)
+        run: |
+          uv run python -m pytest tests/eval/test_safety_redteam.py \
+            -v --tb=short \
+            --junitxml=test-results/safety.xml
+
+      - name: Upload safety results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: safety-gate-results
+          path: services/api/test-results/
+
+  # ────────────────────────────────────────────────────────────────────────────
+  # 4. Integration tests (Python) — require live Postgres + Redis
+  #    Skipped if secrets are not configured (see docs/DESIGN.md issue #4)
+  # ────────────────────────────────────────────────────────────────────────────
+  test-integration:
+    name: Integration tests (Python)
+    runs-on: ubuntu-latest
+    needs: [safety-gate]
+    if: ${{ secrets.ANTHROPIC_API_KEY != '' }}
+    defaults:
+      run:
+        working-directory: services/api
+
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: coach
+          POSTGRES_PASSWORD: coach
+          POSTGRES_DB: lifecoach_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U coach -d lifecoach_test"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s --health-timeout 3s --health-retries 10
+
+    env:
+      DATABASE_URL_SYNC: "postgresql+psycopg://coach:coach@localhost:5432/lifecoach_test"
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      CLERK_JWKS_URL: ${{ secrets.CLERK_JWKS_URL }}
+      CLERK_ISSUER: ${{ secrets.CLERK_ISSUER }}
+      LANGFUSE_PUBLIC_KEY: ${{ secrets.LANGFUSE_PUBLIC_KEY }}
+      LANGFUSE_SECRET_KEY: ${{ secrets.LANGFUSE_SECRET_KEY }}
+      LANGFUSE_HOST: ${{ secrets.LANGFUSE_HOST }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          version: "latest"
+
+      - name: Install Python ${{ env.PYTHON_VERSION }}
+        run: uv python install ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: uv sync --dev
+
+      - name: Run migrations
+        run: uv run alembic upgrade head
+
+      - name: Run integration tests
+        run: |
+          uv run python -m pytest tests/ \
+            -m integration \
+            -v --tb=short \
+            --junitxml=test-results/integration.xml
+
+  # ────────────────────────────────────────────────────────────────────────────
+  # 5. TypeScript lint / typecheck
+  # ────────────────────────────────────────────────────────────────────────────
+  lint-typescript:
+    name: Lint & type-check (TypeScript)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Set up Node ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Type check
+        run: pnpm typecheck
+        continue-on-error: true  # packages are stubs in Phase 0
