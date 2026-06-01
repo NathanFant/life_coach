@@ -1,0 +1,53 @@
+# Langfuse — self-hosted LLM observability (issue #3)
+#
+# Run from repo root:
+#   docker compose -f infra/docker/docker-compose.langfuse.yml up -d
+#
+# Then set in .env:
+#   LANGFUSE_PUBLIC_KEY=pk-lf-...      (from http://localhost:3001 → Settings → API Keys)
+#   LANGFUSE_SECRET_KEY=sk-lf-...
+#   LANGFUSE_HOST=http://localhost:3001
+#
+# Langfuse UI: http://localhost:3001
+# Default login: create an account on first visit.
+#
+# Persists data in named volumes — safe to restart without losing traces.
+name: life-coach-langfuse
+
+services:
+  langfuse-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: langfuse
+      POSTGRES_PASSWORD: langfuse
+      POSTGRES_DB: langfuse
+    volumes:
+      - langfuse_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U langfuse -d langfuse"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  langfuse-server:
+    image: langfuse/langfuse:latest
+    depends_on:
+      langfuse-db:
+        condition: service_healthy
+    ports:
+      - "3001:3000"
+    environment:
+      DATABASE_URL: postgresql://langfuse:langfuse@langfuse-db:5432/langfuse
+      NEXTAUTH_SECRET: change-me-in-production-use-random-string
+      NEXTAUTH_URL: http://localhost:3001
+      # Telemetry: set to "true" to opt out of Langfuse usage analytics
+      LANGFUSE_TELEMETRY_ENABLED: "false"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/api/public/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+
+volumes:
+  langfuse_pgdata:
