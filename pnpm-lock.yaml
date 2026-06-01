@@ -15,8 +15,8 @@ importers:
         specifier: ^2.1.0
         version: 2.9.16
       typescript:
-        specifier: ^5.6.0
-        version: 5.9.3
+        specifier: ^6.0.3
+        version: 6.0.3
 
   apps/mobile:
     dependencies:
@@ -49,8 +49,8 @@ importers:
         specifier: ^18.3.0
         version: 18.3.30
       typescript:
-        specifier: ^5.6.0
-        version: 5.9.3
+        specifier: ^6.0.3
+        version: 6.0.3
 
   apps/web:
     dependencies:
@@ -89,8 +89,8 @@ importers:
         specifier: ^18.3.0
         version: 18.3.7(@types/react@18.3.30)
       typescript:
-        specifier: ^5.6.0
-        version: 5.9.3
+        specifier: ^6.0.3
+        version: 6.0.3
 
   packages/api-client:
     dependencies:
@@ -102,8 +102,8 @@ importers:
         version: 3.25.76
     devDependencies:
       typescript:
-        specifier: ^5.6.0
-        version: 5.9.3
+        specifier: ^6.0.3
+        version: 6.0.3
 
   packages/core:
     dependencies:
@@ -112,8 +112,8 @@ importers:
         version: link:../types
     devDependencies:
       typescript:
-        specifier: ^5.6.0
-        version: 5.9.3
+        specifier: ^6.0.3
+        version: 6.0.3
 
   packages/types:
     dependencies:
@@ -122,8 +122,8 @@ importers:
         version: 3.25.76
     devDependencies:
       typescript:
-        specifier: ^5.6.0
-        version: 5.9.3
+        specifier: ^6.0.3
+        version: 6.0.3
 
   packages/ui:
     dependencies:
@@ -132,8 +132,8 @@ importers:
         version: 18.3.1
     devDependencies:
       typescript:
-        specifier: ^5.6.0
-        version: 5.9.3
+        specifier: ^6.0.3
+        version: 6.0.3
 
 packages:
 
@@ -3734,8 +3734,8 @@ packages:
     resolution: {integrity: sha512-Ne2YiiGN8bmrmJJEuTWTLJR32nh/JdL1+PSicowtNb0WFpn59GK8/lfD61bVtzguz7b3PBt74nxpv/Pw5po5Rg==}
     engines: {node: '>=8'}
 
-  typescript@5.9.3:
-    resolution: {integrity: sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw==}
+  typescript@6.0.3:
+    resolution: {integrity: sha512-y2TvuxSZPDyQakkFRPZHKFm+KKVqIisdg9/CZwm9ftvKXLP8NRWj38/ODjNbr43SsoXqNuAisEf1GdCxqWcdBw==}
     engines: {node: '>=14.17'}
     hasBin: true
 
@@ -8226,7 +8226,7 @@ snapshots:
 
   type-fest@0.7.1: {}
 
-  typescript@5.9.3: {}
+  typescript@6.0.3: {}
 
   ua-parser-js@1.0.41: {}
 
