@@ -17,13 +17,14 @@ If LLM keys are not configured, falls back to storing the raw answer as-is.
 from __future__ import annotations
 
 import json
-import logging
 from typing import Any
+
+import structlog
 
 from app.llm.coach_llm import CoachLLM, LLMMessage
 from app.onboarding.engine import DomainSlot
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 # Slot-specific parsing schemas
 _PARSING_SCHEMAS: dict[DomainSlot, dict[str, Any]] = {
@@ -154,6 +155,6 @@ Respond ONLY with valid JSON matching the schema. No other text.
         return {**parsed, "parsed": True}
 
     except Exception as e:
-        logger.warning("parse_answer failed", slot=slot.value, error=str(e))
+        logger.warning("parse_answer_failed", slot=slot.value, error=str(e))
         # Fall back to storing the raw answer
         return {"value": raw_answer, "parsed": False}
