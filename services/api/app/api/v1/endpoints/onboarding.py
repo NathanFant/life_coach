@@ -21,13 +21,16 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.auth import CurrentUser, CurrentUserDep
+from app.core.config import get_settings
 from app.db.session import AuthedDB
+from app.llm.litellm_client import LiteLLMCoachLLM
 from app.onboarding.engine import (
     DomainSlot,
     OnboardingState,
     QuestionGraph,
     build_initial_state,
 )
+from app.onboarding.parsing import parse_answer
 from app.schemas.onboarding import (
     AnswerIn,
     OnboardingCompleteResponse,
@@ -113,9 +116,8 @@ async def submit_answer(
     """
     Submit an answer to the current onboarding question.
 
-    Fills the specified slot and returns the updated state with the next question.
-    Phase 1: raw_answer is stored directly.
-    Phase 2: raw_answer is parsed into a structured value by the LLM.
+    If a raw_answer is provided, it's parsed via LLM into structured format.
+    If structured_value is provided, it's used as-is (for testing).
     """
     user_id = await _get_user_id(db, current_user.external_auth_id)
     state = await _load_state(db, user_id)
@@ -123,14 +125,19 @@ async def submit_answer(
     try:
         slot = DomainSlot(body.slot)
     except ValueError:
-        raise HTTPException(  # noqa: B904 — intentionally not chaining; ValueError is an impl detail
+        raise HTTPException(  # noqa: B904
             status.HTTP_422_UNPROCESSABLE_ENTITY,
             f"Unknown slot: {body.slot!r}",
         )
 
-    value = (
-        body.structured_value if body.structured_value is not None else {"value": body.raw_answer}
-    )
+    # If structured_value is provided, use it directly (for testing)
+    if body.structured_value is not None:
+        value = body.structured_value
+    else:
+        # Parse the raw answer using the LLM
+        llm = LiteLLMCoachLLM(model=get_settings().extraction_model)
+        value = await parse_answer(llm, slot, body.raw_answer)
+
     state.schema.mark_filled(slot, value)
 
     await _save_state(db, user_id, state)
