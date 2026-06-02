@@ -19,7 +19,7 @@ WORKDIR /app/apps/web
 RUN pnpm build
 
 # Runtime stage
-FROM node:22-alpine
+FROM node:22-alpine AS runtime
 
 WORKDIR /app/apps/web
 

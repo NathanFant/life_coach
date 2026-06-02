@@ -34,8 +34,8 @@ services:
   # FastAPI backend
   api:
     build:
-      context: .
-      dockerfile: services/api/Dockerfile
+      context: services/api
+      dockerfile: Dockerfile
     container_name: lifecoach-api
     ports:
       - "8000:8000"
@@ -66,6 +66,7 @@ services:
     build:
       context: .
       dockerfile: apps/web/Dockerfile
+      target: runtime
     container_name: lifecoach-web
     ports:
       - "3000:3000"
